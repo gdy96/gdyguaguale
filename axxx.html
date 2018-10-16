@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>刮刮卡</title>
+  <style type="text/css">
+    body {
+      width: 1000px;
+      height: 600px;
+      overflow: hidden;
+      margin: 0;
+    }
+
+    #myCanvas {
+      background: black;
+      background-size: cover;
+      width: 1000px;
+      height: 600px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="myCanvas"></div>
+</body>
+<script>
+  (function () {
+
+    window.onload = function () {
+      document.ontouchmove = function (e) {
+        e.preventDefault();//阻止默认的滚动事件
+      };
+      //检测浏览器是否支持canvas标签
+      try {
+        document.createElement("canvas").getContext('2d');
+      } catch (e) {
+        alert('您的手机不支持刮刮卡效果');
+      }
+    };
+    var u = navigator.userAgent;
+    var mobile ='pc';
+
+    if (u.indexOf('iphone') > -1) {
+      mobile ='iphone';
+    }
+    if (u.indexOf('Android') > -1 || u.indexOf('linux') > -1) {
+      mobile ='Android';
+    }
+    //创建一个canvas标签
+    function createCanvas(parent, width, height) {
+      var canvas = {};
+      canvas.node = document.createElement("canvas");
+      canvas.context = canvas.node.getContext('2d');
+      canvas.node.width = width || 1000;
+      canvas.node.height = height || 600;
+      parent.appendChild(canvas.node);
+      return canvas;
+    }
+    function init(container, width, height, fillcolor, type) {
+      var canvas = createCanvas(container, width, height);
+      var ctx = canvas.context;
+      ctx.fillCircle = function (x, y, radius, fillcolor) {
+        this.fillStyle = fillcolor;
+        this.beginPath();
+        this.moveTo(x, y);
+        this.arc(x, y, radius, 0, Math.PI * 2, false);
+        this.fill();
+      };
+      ctx.clearTo = function (fillcolor) {
+        ctx.fillStyle = fillcolor;
+        ctx.fillRect(0, 0, width, height);
+      };
+      ctx.clearTo(fillcolor || "#ddd");
+      canvas.node.addEventListener(mobile == "pc" ? "mousedown" : "touchstart", function (e) {
+        canvas.isDrawing = true;
+      }, false);
+      canvas.node.addEventListener(mobile == "pc" ? "mouseup" : "touchend", function (e) {
+        canvas.isDrawing = false;
+      }, false);
+      canvas.node.addEventListener(mobile == "pc" ? "mousemove" : "touchmove", function (e) {
+        if (!canvas.isDrawing) { return; }
+        if (type == "Android") {
+          var x = e.changedTouches[0].pageX - this.offsetLeft;
+          var y = e.changedTouches[0].pageY - this.offsetTop;
+        } else {
+          var x = e.pageX - this.offsetLeft;
+          var y = e.pageY - this.offsetTop;
+        }
+        var radius = 20;
+        var fillcolor = "#ff0000";
+        //在源图像外显示目标图像。只有源图像外的目标图像部分会被显示，源图像是透明的。
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillCircle(x, y, radius, fillcolor);
+      }, false);
+    }
+    var container = document.getElementById('myCanvas');
+    init(container, 1000, 600, "#696868", mobile);
+  })();
+
+
+</script>
+
+</html>
